@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebSocket Test</title>
+</head>
+
+<body>
+
+<h1>WebSocket Test</h1>
+
+<input
+        id="message"
+        placeholder="Type message"
+>
+
+<button onclick="sendMessage()">
+    Send
+</button>
+
+<h2>Messages</h2>
+
+<div id="messages"></div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+
+
+<script>
+
+    const client = new StompJs.Client({
+
+        brokerURL:
+            "ws://localhost:8080/ws"
+
+    });
+
+
+    client.onConnect = function () {
+
+        console.log("Connected!");
+
+        client.subscribe(
+            "/topic/document/1",
+
+            function (message) {
+
+                const data =
+                    JSON.parse(message.body);
+
+                document.getElementById("messages")
+                    .innerHTML +=
+                    "<p>" +
+                    data.userEmail +
+                    ": " +
+                    data.content +
+                    "</p>";
+            }
+        );
+    };
+
+
+    client.activate();
+
+
+    function sendMessage() {
+
+        const content =
+            document.getElementById("message").value;
+
+
+        client.publish({
+
+            destination: "/app/edit",
+
+            body: JSON.stringify({
+
+                documentId: 1,
+
+                userEmail: "aditya@gmail.com",
+
+                content: content,
+
+                type: "EDIT"
+
+            })
+
+        });
+    }
+
+</script>
+
+</body>
+
+</html>

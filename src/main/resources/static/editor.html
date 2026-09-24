@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Document Editor</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f5f5f5;
+        }
+
+        .header {
+            padding: 15px 25px;
+            background: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #status {
+            color: green;
+        }
+
+        #editor {
+            width: 90%;
+            height: 500px;
+            margin: 30px auto;
+            display: block;
+            padding: 20px;
+            font-size: 18px;
+            resize: none;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+    <h2>Document Editor</h2>
+
+    <span id="status">
+        Connecting...
+    </span>
+
+</div>
+
+
+<textarea
+        id="editor"
+        placeholder="Start writing..."
+></textarea>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+
+<script>
+
+    const documentId = 2;
+
+    const userEmail = "aditya@gmail.com";
+
+    const editor =
+        document.getElementById("editor");
+
+    const status =
+        document.getElementById("status");
+
+
+    // =========================
+    // LOAD DOCUMENT
+    // =========================
+
+    async function loadDocument() {
+
+    const token = localStorage.getItem("token");
+
+    console.log("Token:", token);
+
+    if (!token) {
+        alert("No JWT token found. Please login.");
+        window.location.href = "/login.html";
+        return;
+    }
+
+    try {
+
+        const response = await fetch(
+            "/documents/" + documentId,
+            {
+                method: "GET",
+                headers: {
+                    "Authorization": "Bearer " + token
+                }
+            }
+        );
+
+        console.log("Status:", response.status);
+
+        const responseText = await response.text();
+
+        console.log("Response:", responseText);
+
+
+        if (!response.ok) {
+
+            alert(
+                "Unable to load document\n\n" +
+                "Status: " +
+                response.status +
+                "\n\n" +
+                responseText
+            );
+
+            return;
+        }
+
+
+        const document =
+            JSON.parse(responseText);
+
+        console.log("Document:", document);
+
+        editor.value =
+            document.content || "";
+
+    }
+    catch (error) {
+
+        console.error(
+            "Error loading document:",
+            error
+        );
+
+        alert("Error loading document");
+    }
+    }
+
+
+    // =========================
+    // WEBSOCKET
+    // =========================
+
+    const client =
+        new StompJs.Client({
+
+            brokerURL:
+                "ws://localhost:8080/ws"
+
+        });
+
+
+    client.onConnect = function () {
+
+        console.log(
+            "WebSocket connected"
+        );
+
+        status.innerText =
+            "Connected";
+
+
+        client.subscribe(
+
+            "/topic/document/" +
+            documentId,
+
+            function (message) {
+
+                const data =
+                    JSON.parse(
+                        message.body
+                    );
+
+
+                console.log(
+                    "Received:",
+                    data
+                );
+
+
+                // Don't update our own editor
+
+                if (
+                    data.userEmail !==
+                    userEmail
+                ) {
+
+                    editor.value =
+                        data.content;
+
+                }
+
+            }
+
+        );
+
+    };
+
+
+    client.onWebSocketError =
+        function (error) {
+
+            console.error(
+                "WebSocket error:",
+                error
+            );
+
+            status.innerText =
+                "Connection Error";
+
+        };
+
+
+    // =========================
+    // EDITOR
+    // =========================
+
+    editor.addEventListener(
+        "input",
+        function () {
+
+            const content =
+                editor.value;
+
+
+            client.publish({
+
+                destination:
+                    "/app/edit",
+
+                body:
+                    JSON.stringify({
+
+                        documentId:
+                            documentId,
+
+                        userEmail:
+                            userEmail,
+
+                        content:
+                            content,
+
+                        type:
+                            "EDIT"
+
+                    })
+
+            });
+
+        }
+    );
+
+
+    // =========================
+    // START
+    // =========================
+
+    loadDocument();
+
+    client.activate();
+
+</script>
+
+</body>
+
+</html>

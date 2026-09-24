@@ -16,6 +16,7 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
+
     @PostMapping
     public Document createDocument(
             @RequestBody Map<String, String> request,
@@ -31,6 +32,7 @@ public class DocumentController {
         );
     }
 
+
     @GetMapping
     public List<Document> getMyDocuments(
             Authentication authentication
@@ -41,13 +43,21 @@ public class DocumentController {
         return documentService.getMyDocuments(email);
     }
 
+
     @GetMapping("/{id}")
     public Document getDocument(
-            @PathVariable Long id
+            @PathVariable Long id,
+            Authentication authentication
     ) {
 
-        return documentService.getDocument(id, null);
+        String email = authentication.getName();
+
+        return documentService.getDocument(
+                id,
+                email
+        );
     }
+
 
     @PutMapping("/{id}")
     public Document updateDocument(
@@ -65,6 +75,7 @@ public class DocumentController {
                 request.get("content")
         );
     }
+
 
     @DeleteMapping("/{id}")
     public String deleteDocument(

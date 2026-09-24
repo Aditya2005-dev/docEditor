@@ -44,13 +44,15 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Frontend pages
+                        // Frontend
                         .requestMatchers(
                                 "/",
                                 "/index.html",
                                 "/login.html",
                                 "/register.html",
                                 "/dashboard.html",
+                                "/test-websocket.html",
+                                "/editor.html",
                                 "/css/**",
                                 "/js/**"
                         ).permitAll()
@@ -61,7 +63,12 @@ public class SecurityConfig {
                                 "/auth/login"
                         ).permitAll()
 
-                        // Everything else
+                        // WebSocket handshake
+                        .requestMatchers(
+                                "/ws/**"
+                        ).permitAll()
+
+                        // Everything else requires JWT
                         .anyRequest().authenticated()
                 )
 

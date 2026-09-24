@@ -3,17 +3,12 @@ package com.example.doc_editor.websocket;
 public class DocumentMessage {
 
     private Long documentId;
-
     private String userEmail;
-
     private String content;
-
     private MessageType type;
-
 
     public DocumentMessage() {
     }
-
 
     public Long getDocumentId() {
         return documentId;
@@ -23,7 +18,6 @@ public class DocumentMessage {
         this.documentId = documentId;
     }
 
-
     public String getUserEmail() {
         return userEmail;
     }
@@ -32,7 +26,6 @@ public class DocumentMessage {
         this.userEmail = userEmail;
     }
 
-
     public String getContent() {
         return content;
     }
@@ -40,7 +33,6 @@ public class DocumentMessage {
     public void setContent(String content) {
         this.content = content;
     }
-
 
     public MessageType getType() {
         return type;
