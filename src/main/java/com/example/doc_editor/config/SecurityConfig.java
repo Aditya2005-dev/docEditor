@@ -25,7 +25,6 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-
         return new BCryptPasswordEncoder();
     }
 
@@ -45,11 +44,24 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
+                        // Frontend pages
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/login.html",
+                                "/register.html",
+                                "/dashboard.html",
+                                "/css/**",
+                                "/js/**"
+                        ).permitAll()
+
+                        // Authentication
                         .requestMatchers(
                                 "/auth/register",
                                 "/auth/login"
                         ).permitAll()
 
+                        // Everything else
                         .anyRequest().authenticated()
                 )
 
