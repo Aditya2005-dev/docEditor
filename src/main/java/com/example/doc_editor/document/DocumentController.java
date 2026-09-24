@@ -46,7 +46,7 @@ public class DocumentController {
             @PathVariable Long id
     ) {
 
-        return documentService.getDocument(id);
+        return documentService.getDocument(id, null);
     }
 
     @PutMapping("/{id}")

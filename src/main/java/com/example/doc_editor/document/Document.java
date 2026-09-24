@@ -1,6 +1,7 @@
 package com.example.doc_editor.document;
 
 import com.example.doc_editor.user.User;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -23,7 +24,11 @@ public class Document {
     public Document() {
     }
 
-    public Document(String title, String content, User owner) {
+    public Document(
+            String title,
+            String content,
+            User owner
+    ) {
         this.title = title;
         this.content = content;
         this.owner = owner;
