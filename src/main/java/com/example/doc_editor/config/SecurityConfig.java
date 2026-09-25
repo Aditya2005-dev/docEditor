@@ -19,8 +19,11 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    public SecurityConfig(
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) {
+        this.jwtAuthenticationFilter =
+                jwtAuthenticationFilter;
     }
 
     @Bean
@@ -44,32 +47,28 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
 
-                        // Frontend
                         .requestMatchers(
                                 "/",
                                 "/index.html",
                                 "/login.html",
                                 "/register.html",
                                 "/dashboard.html",
-                                "/test-websocket.html",
                                 "/editor.html",
+                                "/test-websocket.html",
                                 "/css/**",
                                 "/js/**"
                         ).permitAll()
 
-                        // Authentication
                         .requestMatchers(
                                 "/auth/register",
                                 "/auth/login"
                         ).permitAll()
 
-                        // WebSocket handshake
-                        .requestMatchers(
-                                "/ws/**"
-                        ).permitAll()
+                        .requestMatchers("/ws/**")
+                        .permitAll()
 
-                        // Everything else requires JWT
-                        .anyRequest().authenticated()
+                        .anyRequest()
+                        .authenticated()
                 )
 
                 .addFilterBefore(

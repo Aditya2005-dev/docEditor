@@ -3,6 +3,8 @@ package com.example.doc_editor.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -12,13 +14,13 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private final String SECRET_KEY =
-            "mySecretKeyForDocEditorProjectJava21Jwt123456789";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     private SecretKey getKey() {
 
         return Keys.hmacShaKeyFor(
-                SECRET_KEY.getBytes(StandardCharsets.UTF_8)
+                secretKey.getBytes(StandardCharsets.UTF_8)
         );
     }
 
@@ -27,7 +29,12 @@ public class JwtService {
         return Jwts.builder()
                 .subject(email)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + 86400000))
+                .expiration(
+                        new Date(
+                                System.currentTimeMillis()
+                                        + 86400000
+                        )
+                )
                 .signWith(getKey())
                 .compact();
     }

@@ -5,5 +5,8 @@ public enum MessageType {
     JOIN,
     LEAVE,
     EDIT,
-    CONFLICT
+    CONFLICT,
+    PRESENCE,
+    STATUS,
+    CURSOR
 }

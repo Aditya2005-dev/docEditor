@@ -12,6 +12,17 @@ public class DocumentMessage {
 
     private MessageType type;
 
+    // VIEWING / EDITING
+    private String status;
+
+    // Cursor position
+    private Integer cursorPosition;
+
+    // Text selection
+    private Integer selectionStart;
+
+    private Integer selectionEnd;
+
     public DocumentMessage() {
     }
 
@@ -53,5 +64,37 @@ public class DocumentMessage {
 
     public void setType(MessageType type) {
         this.type = type;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public Integer getCursorPosition() {
+        return cursorPosition;
+    }
+
+    public void setCursorPosition(Integer cursorPosition) {
+        this.cursorPosition = cursorPosition;
+    }
+
+    public Integer getSelectionStart() {
+        return selectionStart;
+    }
+
+    public void setSelectionStart(Integer selectionStart) {
+        this.selectionStart = selectionStart;
+    }
+
+    public Integer getSelectionEnd() {
+        return selectionEnd;
+    }
+
+    public void setSelectionEnd(Integer selectionEnd) {
+        this.selectionEnd = selectionEnd;
     }
 }

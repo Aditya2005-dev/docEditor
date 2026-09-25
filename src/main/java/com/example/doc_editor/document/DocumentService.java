@@ -3,6 +3,8 @@ package com.example.doc_editor.document;
 import com.example.doc_editor.document.permission.DocumentPermission;
 import com.example.doc_editor.document.permission.Permission;
 import com.example.doc_editor.document.permission.PermissionRepository;
+import com.example.doc_editor.exception.AccessDeniedException;
+import com.example.doc_editor.exception.DocumentNotFoundException;
 import com.example.doc_editor.user.User;
 import com.example.doc_editor.user.UserRepository;
 
@@ -27,7 +29,6 @@ public class DocumentService {
         this.permissionRepository = permissionRepository;
     }
 
-
     // ==========================================
     // CREATE DOCUMENT
     // ==========================================
@@ -46,7 +47,6 @@ public class DocumentService {
         return documentRepository.save(document);
     }
 
-
     // ==========================================
     // MY DOCUMENTS
     // ==========================================
@@ -60,7 +60,6 @@ public class DocumentService {
         return documentRepository
                 .findByOwnerId(user.getId());
     }
-
 
     // ==========================================
     // SHARED DOCUMENTS
@@ -83,7 +82,6 @@ public class DocumentService {
                 .toList();
     }
 
-
     // ==========================================
     // GET DOCUMENT
     // ==========================================
@@ -98,32 +96,32 @@ public class DocumentService {
         Document document = documentRepository
                 .findById(documentId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new DocumentNotFoundException(
                                 "Document not found"
                         )
                 );
 
+        // Owner has access
         if (document.getOwner().getId()
                 .equals(user.getId())) {
 
             return document;
         }
 
-        DocumentPermission permission =
-                permissionRepository
-                        .findByDocumentIdAndUserId(
-                                documentId,
-                                user.getId()
+        // Check shared permission
+        permissionRepository
+                .findByDocumentIdAndUserId(
+                        documentId,
+                        user.getId()
+                )
+                .orElseThrow(() ->
+                        new AccessDeniedException(
+                                "You do not have access to this document"
                         )
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "You do not have access"
-                                )
-                        );
+                );
 
         return document;
     }
-
 
     // ==========================================
     // UPDATE DOCUMENT
@@ -141,11 +139,10 @@ public class DocumentService {
         Document document = documentRepository
                 .findById(documentId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new DocumentNotFoundException(
                                 "Document not found"
                         )
                 );
-
 
         // Owner can edit
         if (document.getOwner().getId()
@@ -157,7 +154,6 @@ public class DocumentService {
             return documentRepository.save(document);
         }
 
-
         // Check shared permission
         DocumentPermission permission =
                 permissionRepository
@@ -166,27 +162,25 @@ public class DocumentService {
                                 user.getId()
                         )
                         .orElseThrow(() ->
-                                new RuntimeException(
-                                        "You do not have access"
+                                new AccessDeniedException(
+                                        "You do not have access to this document"
                                 )
                         );
 
-
+        // Viewer cannot edit
         if (permission.getPermission()
                 != Permission.EDITOR) {
 
-            throw new RuntimeException(
+            throw new AccessDeniedException(
                     "You only have view access"
             );
         }
-
 
         document.setTitle(title);
         document.setContent(content);
 
         return documentRepository.save(document);
     }
-
 
     // ==========================================
     // SHARE DOCUMENT
@@ -204,35 +198,31 @@ public class DocumentService {
         Document document = documentRepository
                 .findById(documentId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new DocumentNotFoundException(
                                 "Document not found"
                         )
                 );
-
 
         // Only owner can share
         if (!document.getOwner().getId()
                 .equals(owner.getId())) {
 
-            throw new RuntimeException(
+            throw new AccessDeniedException(
                     "Only the owner can share this document"
             );
         }
 
-
         User userToShare =
                 getUser(userEmail);
-
 
         // Owner cannot share with himself
         if (owner.getId()
                 .equals(userToShare.getId())) {
 
-            throw new RuntimeException(
+            throw new AccessDeniedException(
                     "Owner already has access"
             );
         }
-
 
         // Check if permission already exists
         var existingPermission =
@@ -241,7 +231,6 @@ public class DocumentService {
                                 documentId,
                                 userToShare.getId()
                         );
-
 
         if (existingPermission.isPresent()) {
 
@@ -255,7 +244,6 @@ public class DocumentService {
 
             return "Permission updated";
         }
-
 
         DocumentPermission newPermission =
                 new DocumentPermission(
@@ -271,7 +259,6 @@ public class DocumentService {
         return "Document shared successfully";
     }
 
-
     // ==========================================
     // GET MEMBERS
     // ==========================================
@@ -286,25 +273,22 @@ public class DocumentService {
         Document document = documentRepository
                 .findById(documentId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new DocumentNotFoundException(
                                 "Document not found"
                         )
                 );
 
-
         if (!document.getOwner().getId()
                 .equals(user.getId())) {
 
-            throw new RuntimeException(
+            throw new AccessDeniedException(
                     "Only the owner can view members"
             );
         }
 
-
         return permissionRepository
                 .findByDocumentId(documentId);
     }
-
 
     // ==========================================
     // DELETE DOCUMENT
@@ -320,26 +304,23 @@ public class DocumentService {
         Document document = documentRepository
                 .findById(documentId)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new DocumentNotFoundException(
                                 "Document not found"
                         )
                 );
 
-
         if (!document.getOwner().getId()
                 .equals(user.getId())) {
 
-            throw new RuntimeException(
+            throw new AccessDeniedException(
                     "Only the owner can delete this document"
             );
         }
-
 
         documentRepository.delete(document);
 
         return "Document deleted successfully";
     }
-
 
     // ==========================================
     // GET USER
@@ -350,7 +331,7 @@ public class DocumentService {
         return userRepository
                 .findByEmail(email)
                 .orElseThrow(() ->
-                        new RuntimeException(
+                        new AccessDeniedException(
                                 "User not found"
                         )
                 );
