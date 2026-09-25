@@ -3,8 +3,13 @@ package com.example.doc_editor.websocket;
 public class DocumentMessage {
 
     private Long documentId;
+
     private String userEmail;
+
     private String content;
+
+    private Long version;
+
     private MessageType type;
 
     public DocumentMessage() {
@@ -32,6 +37,14 @@ public class DocumentMessage {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public MessageType getType() {

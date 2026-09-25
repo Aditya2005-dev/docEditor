@@ -1,75 +1,162 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
     <title>Document Editor</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
 
     <style>
 
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background: #f5f5f5;
+        * {
+            box-sizing: border-box;
         }
 
-        .header {
-            padding: 15px 25px;
-            background: white;
-            border-bottom: 1px solid #ddd;
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+        }
+
+        .topbar {
+            background: #222;
+            color: white;
+            padding: 15px 20px;
+
             display: flex;
             justify-content: space-between;
+            align-items: center;
         }
 
-        #status {
-            color: green;
+        .status {
+            font-size: 14px;
         }
 
-        #editor {
-            width: 90%;
-            height: 500px;
+        .container {
+            max-width: 1000px;
             margin: 30px auto;
-            display: block;
             padding: 20px;
+        }
+
+        .info {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+
+            display: flex;
+            gap: 30px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 500px;
+
+            padding: 20px;
+
             font-size: 18px;
-            resize: none;
+            line-height: 1.6;
+
             border: 1px solid #ccc;
             border-radius: 8px;
+
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #555;
+        }
+
+        .message {
+            margin-top: 15px;
+            padding: 12px;
+
+            background: #fff3cd;
+            border-radius: 6px;
+
+            display: none;
         }
 
     </style>
 
 </head>
 
+
 <body>
 
-<div class="header">
+<div class="topbar">
 
     <h2>Document Editor</h2>
 
-    <span id="status">
-        Connecting...
-    </span>
+    <div class="status">
+        Status:
+        <span id="status">Connecting...</span>
+    </div>
 
 </div>
 
 
-<textarea
-        id="editor"
-        placeholder="Start writing..."
-></textarea>
+<div class="container">
+
+    <div class="info">
+
+        <div>
+            <strong>Document:</strong>
+            <span id="documentId"></span>
+        </div>
+
+        <div>
+            <strong>Version:</strong>
+            <span id="version">0</span>
+        </div>
+
+    </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <textarea
+            id="editor"
+            placeholder="Start writing..."
+            oninput="handleEditorInput()"
+    ></textarea>
 
 
-<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <div
+            id="message"
+            class="message">
+    </div>
+
+</div>
+
 
 <script>
 
+    // ==========================================
+    // DOCUMENT
+    // ==========================================
+
     const documentId = 2;
 
-    const userEmail = "aditya@gmail.com";
+    document.getElementById("documentId").innerText =
+        documentId;
+
+
+    // ==========================================
+    // VARIABLES
+    // ==========================================
+
+    let documentVersion = 0;
+
+    let typingTimer = null;
+
+    const debounceTime = 500;
+
 
     const editor =
         document.getElementById("editor");
@@ -77,137 +164,289 @@
     const status =
         document.getElementById("status");
 
+    const versionDisplay =
+        document.getElementById("version");
 
-    // =========================
+    const messageBox =
+        document.getElementById("message");
+
+
+    // ==========================================
+    // GET EMAIL FROM JWT
+    // ==========================================
+
+    function getUserEmail() {
+
+        const token =
+            localStorage.getItem("token");
+
+        if (!token) {
+
+            console.log("No JWT token found");
+
+            return "unknown";
+        }
+
+        try {
+
+            const payload =
+                token.split(".")[1];
+
+            const decodedPayload =
+                JSON.parse(
+                    atob(
+                        payload
+                            .replace(/-/g, "+")
+                            .replace(/_/g, "/")
+                    )
+                );
+
+            console.log(
+                "Logged in user:",
+                decodedPayload.sub
+            );
+
+            return decodedPayload.sub;
+
+        } catch (error) {
+
+            console.error(
+                "JWT decode error:",
+                error
+            );
+
+            return "unknown";
+        }
+    }
+
+
+    const userEmail =
+        getUserEmail();
+
+
+    // ==========================================
     // LOAD DOCUMENT
-    // =========================
+    // ==========================================
 
     async function loadDocument() {
 
-    const token = localStorage.getItem("token");
-
-    console.log("Token:", token);
-
-    if (!token) {
-        alert("No JWT token found. Please login.");
-        window.location.href = "/login.html";
-        return;
-    }
-
-    try {
-
-        const response = await fetch(
-            "/documents/" + documentId,
-            {
-                method: "GET",
-                headers: {
-                    "Authorization": "Bearer " + token
-                }
-            }
+        console.log(
+            "Loading document..."
         );
 
-        console.log("Status:", response.status);
+        const token =
+            localStorage.getItem("token");
 
-        const responseText = await response.text();
-
-        console.log("Response:", responseText);
-
-
-        if (!response.ok) {
+        if (!token) {
 
             alert(
-                "Unable to load document\n\n" +
-                "Status: " +
-                response.status +
-                "\n\n" +
-                responseText
+                "Please login first."
             );
+
+            window.location.href =
+                "/login.html";
 
             return;
         }
 
 
-        const document =
-            JSON.parse(responseText);
+        try {
 
-        console.log("Document:", document);
+            const response =
+                await fetch(
+                    "/documents/" + documentId,
+                    {
+                        method: "GET",
 
-        editor.value =
-            document.content || "";
+                        headers: {
+                            "Authorization":
+                                "Bearer " + token
+                        }
+                    }
+                );
 
+
+            console.log(
+                "Document response status:",
+                response.status
+            );
+
+
+            if (!response.ok) {
+
+                alert(
+                    "Could not load document. Status: "
+                    + response.status
+                );
+
+                return;
+            }
+
+
+            const document =
+                await response.json();
+
+
+            console.log(
+                "Document loaded:",
+                document
+            );
+
+
+            // Content
+            editor.value =
+                document.content || "";
+
+
+            // Version
+            documentVersion =
+                document.version == null
+                    ? 0
+                    : document.version;
+
+
+            versionDisplay.innerText =
+                documentVersion;
+
+
+            console.log(
+                "Document version:",
+                documentVersion
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Load document error:",
+                error
+            );
+        }
     }
-    catch (error) {
-
-        console.error(
-            "Error loading document:",
-            error
-        );
-
-        alert("Error loading document");
-    }
-    }
 
 
-    // =========================
+    // ==========================================
     // WEBSOCKET
-    // =========================
+    // ==========================================
 
     const client =
         new StompJs.Client({
 
             brokerURL:
-                "ws://localhost:8080/ws"
+                "ws://localhost:8080/ws",
 
+            reconnectDelay: 5000
         });
 
 
-    client.onConnect = function () {
+    // ==========================================
+    // CONNECT
+    // ==========================================
 
-        console.log(
-            "WebSocket connected"
-        );
+    client.onConnect =
+        function () {
 
-        status.innerText =
-            "Connected";
+            console.log(
+                "WebSocket connected"
+            );
+
+            status.innerText =
+                "Connected";
 
 
-        client.subscribe(
+            client.subscribe(
+                "/topic/document/" + documentId,
 
-            "/topic/document/" +
-            documentId,
+                function (message) {
 
-            function (message) {
-
-                const data =
-                    JSON.parse(
+                    console.log(
+                        "WebSocket message received:",
                         message.body
                     );
 
 
-                console.log(
-                    "Received:",
-                    data
-                );
+                    const data =
+                        JSON.parse(
+                            message.body
+                        );
 
 
-                // Don't update our own editor
+                    // ==================================
+                    // CONFLICT
+                    // ==================================
 
-                if (
-                    data.userEmail !==
-                    userEmail
-                ) {
+                    if (
+                        data.type === "CONFLICT"
+                    ) {
 
-                    editor.value =
-                        data.content;
+                        console.log(
+                            "CONFLICT:",
+                            data
+                        );
+
+
+                        documentVersion =
+                            data.version;
+
+
+                        versionDisplay.innerText =
+                            documentVersion;
+
+
+                        /*
+                         * Load latest server content.
+                         */
+
+                        editor.value =
+                            data.content || "";
+
+
+                        showMessage(
+                            "Conflict detected. Latest version loaded."
+                        );
+
+
+                        return;
+                    }
+
+
+                    // ==================================
+                    // NORMAL EDIT
+                    // ==================================
+
+                    if (
+                        data.version != null
+                    ) {
+
+                        documentVersion =
+                            data.version;
+
+
+                        versionDisplay.innerText =
+                            documentVersion;
+                    }
+
+
+                    /*
+                     * Only update editor if
+                     * another user made the edit.
+                     */
+
+                    if (
+                        data.userEmail !== userEmail
+                    ) {
+
+                        editor.value =
+                            data.content || "";
+                    }
 
                 }
+            );
+        };
 
-            }
 
-        );
-
-    };
-
+    // ==========================================
+    // WEBSOCKET ERROR
+    // ==========================================
 
     client.onWebSocketError =
         function (error) {
@@ -219,57 +458,159 @@
 
             status.innerText =
                 "Connection Error";
-
         };
 
 
-    // =========================
-    // EDITOR
-    // =========================
+    // ==========================================
+    // WEBSOCKET CLOSE
+    // ==========================================
 
-    editor.addEventListener(
-        "input",
+    client.onWebSocketClose =
         function () {
 
-            const content =
-                editor.value;
+            console.log(
+                "WebSocket disconnected"
+            );
+
+            status.innerText =
+                "Disconnected";
+        };
 
 
-            client.publish({
+    // ==========================================
+    // HANDLE INPUT
+    // ==========================================
 
-                destination:
-                    "/app/edit",
+    function handleEditorInput() {
 
-                body:
-                    JSON.stringify({
+        console.log(
+            "INPUT EVENT FIRED"
+        );
 
-                        documentId:
-                            documentId,
 
-                        userEmail:
-                            userEmail,
+        clearTimeout(
+            typingTimer
+        );
 
-                        content:
-                            content,
 
-                        type:
-                            "EDIT"
+        typingTimer =
+            setTimeout(
+                function () {
 
-                    })
+                    console.log(
+                        "Calling sendEdit()"
+                    );
 
-            });
+                    sendEdit();
 
+                },
+                debounceTime
+            );
+    }
+
+
+    // ==========================================
+    // SEND EDIT
+    // ==========================================
+
+    function sendEdit() {
+
+        console.log(
+            "sendEdit() called"
+        );
+
+
+        if (!client.connected) {
+
+            console.log(
+                "WebSocket not connected"
+            );
+
+            return;
         }
-    );
 
 
-    // =========================
+        const content =
+            editor.value;
+
+
+        console.log(
+            "Sending edit:",
+            {
+                documentId:
+                    documentId,
+
+                userEmail:
+                    userEmail,
+
+                version:
+                    documentVersion,
+
+                content:
+                    content
+            }
+        );
+
+
+        client.publish({
+
+            destination:
+                "/app/edit",
+
+            body:
+                JSON.stringify({
+
+                    documentId:
+                        documentId,
+
+                    userEmail:
+                        userEmail,
+
+                    content:
+                        content,
+
+                    version:
+                        documentVersion,
+
+                    type:
+                        "EDIT"
+                })
+        });
+    }
+
+
+    // ==========================================
+    // MESSAGE
+    // ==========================================
+
+    function showMessage(text) {
+
+        messageBox.innerText =
+            text;
+
+        messageBox.style.display =
+            "block";
+
+
+        setTimeout(
+            function () {
+
+                messageBox.style.display =
+                    "none";
+
+            },
+            4000
+        );
+    }
+
+
+    // ==========================================
     // START
-    // =========================
-
-    loadDocument();
+    // ==========================================
 
     client.activate();
+
+    loadDocument();
 
 </script>
 

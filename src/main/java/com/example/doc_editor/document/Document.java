@@ -1,7 +1,6 @@
 package com.example.doc_editor.document;
 
 import com.example.doc_editor.user.User;
-
 import jakarta.persistence.*;
 
 @Entity
@@ -21,17 +20,16 @@ public class Document {
     @JoinColumn(name = "owner_id")
     private User owner;
 
+    private Long version = 0L;
+
     public Document() {
     }
 
-    public Document(
-            String title,
-            String content,
-            User owner
-    ) {
+    public Document(String title, String content, User owner) {
         this.title = title;
         this.content = content;
         this.owner = owner;
+        this.version = 0L;
     }
 
     public Long getId() {
@@ -50,6 +48,10 @@ public class Document {
         return owner;
     }
 
+    public Long getVersion() {
+        return version;
+    }
+
     public void setTitle(String title) {
         this.title = title;
     }
@@ -60,5 +62,9 @@ public class Document {
 
     public void setOwner(User owner) {
         this.owner = owner;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 }

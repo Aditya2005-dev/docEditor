@@ -4,5 +4,6 @@ public enum MessageType {
 
     JOIN,
     LEAVE,
-    EDIT
+    EDIT,
+    CONFLICT
 }
