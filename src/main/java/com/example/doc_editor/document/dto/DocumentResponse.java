@@ -1,4 +1,4 @@
-package com.example.doc_editor.auth.dto;
+package com.example.doc_editor.document.dto;
 
 import com.example.doc_editor.document.Document;
 

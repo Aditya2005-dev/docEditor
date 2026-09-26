@@ -4,19 +4,31 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Dashboard - DocEditor</title>
 
-    <link rel="stylesheet" href="/css/style.css">
+    <link
+        rel="stylesheet"
+        href="/css/style.css"
+    >
 
 </head>
 
+
 <body>
+
 
 <div class="dashboard">
 
-    <!-- Header -->
+
+    <!-- ==========================================
+         HEADER
+    =========================================== -->
 
     <header class="dashboard-header">
 
@@ -32,9 +44,10 @@
 
         </div>
 
+
         <button
-                class="logout-button"
-                onclick="logout()"
+            class="logout-button"
+            onclick="logout()"
         >
             Logout
         </button>
@@ -42,45 +55,64 @@
     </header>
 
 
-    <!-- Create Document -->
+    <!-- ==========================================
+         CREATE DOCUMENT
+    =========================================== -->
 
     <section class="create-section">
 
-        <h2>Create New Document</h2>
+        <h2>
+            Create New Document
+        </h2>
+
 
         <input
-                type="text"
-                id="title"
-                placeholder="Document title"
+            type="text"
+            id="title"
+            placeholder="Document title"
         >
 
+
         <textarea
-                id="content"
-                placeholder="Start writing..."
+            id="content"
+            placeholder="Start writing..."
         ></textarea>
 
-        <button onclick="createDocument()">
+
+        <button
+            onclick="createDocument()"
+        >
             Create Document
         </button>
+
 
         <p id="createMessage"></p>
 
     </section>
 
 
-    <!-- Documents -->
+    <!-- ==========================================
+         DOCUMENTS
+    =========================================== -->
 
     <section class="documents-section">
 
+
         <div class="section-header">
 
-            <h2>My Documents</h2>
+            <h2>
+                My Documents
+            </h2>
 
-            <button onclick="loadDocuments()">
+
+            <button
+                onclick="loadDocuments()"
+            >
                 Refresh
             </button>
 
         </div>
+
 
         <div id="documents">
 
@@ -90,68 +122,20 @@
 
         </div>
 
-    </section>
-
-
-    <!-- Editor -->
-
-    <section
-            id="editor"
-            class="editor-section"
-            style="display: none;"
-    >
-
-        <div class="section-header">
-
-            <h2>Edit Document</h2>
-
-            <button
-                    class="close-button"
-                    onclick="closeEditor()"
-            >
-                Close
-            </button>
-
-        </div>
-
-
-        <input
-                type="text"
-                id="editTitle"
-                placeholder="Document title"
-        >
-
-
-        <textarea
-                id="editContent"
-                placeholder="Document content"
-        ></textarea>
-
-
-        <div class="editor-buttons">
-
-            <button onclick="updateDocument()">
-                Save Changes
-            </button>
-
-            <button
-                    class="danger"
-                    onclick="deleteDocument()"
-            >
-                Delete Document
-            </button>
-
-        </div>
-
-
-        <p id="editMessage"></p>
 
     </section>
+
 
 </div>
 
 
+<!-- ==========================================
+     JAVASCRIPT
+=========================================== -->
+
 <script src="/js/dashboard.js"></script>
 
+
 </body>
+
 </html>

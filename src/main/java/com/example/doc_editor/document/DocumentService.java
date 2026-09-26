@@ -323,6 +323,74 @@ public class DocumentService {
     }
 
     // ==========================================
+    // CHECK VIEW ACCESS
+    // ==========================================
+
+    public boolean canViewDocument(
+            Long documentId,
+            String email
+    ) {
+
+        getDocument(
+                documentId,
+                email
+        );
+
+        return true;
+    }
+
+    // ==========================================
+    // CHECK EDIT ACCESS
+    // ==========================================
+
+    public boolean canEditDocument(
+            Long documentId,
+            String email
+    ) {
+
+        User user = getUser(email);
+
+        Document document = documentRepository
+                .findById(documentId)
+                .orElseThrow(() ->
+                        new DocumentNotFoundException(
+                                "Document not found"
+                        )
+                );
+
+        // Owner can edit
+        if (document.getOwner().getId()
+                .equals(user.getId())) {
+
+            return true;
+        }
+
+        // Check shared permission
+        DocumentPermission permission =
+                permissionRepository
+                        .findByDocumentIdAndUserId(
+                                documentId,
+                                user.getId()
+                        )
+                        .orElseThrow(() ->
+                                new AccessDeniedException(
+                                        "You do not have access to this document"
+                                )
+                        );
+
+        // Only EDITOR can edit
+        if (permission.getPermission()
+                != Permission.EDITOR) {
+
+            throw new AccessDeniedException(
+                    "You only have view access"
+            );
+        }
+
+        return true;
+    }
+
+    // ==========================================
     // GET USER
     // ==========================================
 

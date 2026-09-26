@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
 
     <meta name="viewport"
-        content="width=device-width, initial-scale=1.0">
+          content="width=device-width, initial-scale=1.0">
 
     <title>Document Editor</title>
 
@@ -24,6 +24,10 @@
             background: #f4f4f4;
         }
 
+        /* ==============================
+           TOP BAR
+        ============================== */
+
         .topbar {
             background: #222;
             color: white;
@@ -34,15 +38,27 @@
             align-items: center;
         }
 
+        .topbar h2 {
+            margin: 0;
+        }
+
         .status {
             font-size: 14px;
         }
+
+        /* ==============================
+           MAIN CONTAINER
+        ============================== */
 
         .container {
             max-width: 1000px;
             margin: 30px auto;
             padding: 20px;
         }
+
+        /* ==============================
+           DOCUMENT INFO
+        ============================== */
 
         .info {
             background: white;
@@ -53,6 +69,55 @@
             display: flex;
             gap: 30px;
         }
+
+        /* ==============================
+           ACTIVE USERS
+        ============================== */
+
+        .active-users {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .active-users h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        .active-user {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            padding: 10px;
+            margin-top: 8px;
+
+            background: #f5f5f5;
+            border-radius: 6px;
+        }
+
+        .user-name {
+            font-weight: bold;
+        }
+
+        .user-status {
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .editing {
+            color: green;
+        }
+
+        .viewing {
+            color: #555;
+        }
+
+        /* ==============================
+           EDITOR
+        ============================== */
 
         textarea {
             width: 100%;
@@ -74,6 +139,10 @@
             border-color: #555;
         }
 
+        /* ==============================
+           MESSAGE
+        ============================== */
+
         .message {
             margin-top: 15px;
             padding: 12px;
@@ -84,6 +153,35 @@
             display: none;
         }
 
+        /* ==============================
+           MOBILE
+        ============================== */
+
+        @media (max-width: 600px) {
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .info {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .container {
+                margin: 10px auto;
+                padding: 10px;
+            }
+
+            textarea {
+                height: 400px;
+                font-size: 16px;
+            }
+
+        }
+
     </style>
 
 </head>
@@ -91,59 +189,142 @@
 
 <body>
 
+
+<!-- ==========================================
+     TOP BAR
+========================================== -->
+
 <div class="topbar">
 
     <h2>Document Editor</h2>
 
     <div class="status">
+
         Status:
-        <span id="status">Connecting...</span>
+
+        <span id="status">
+            Connecting...
+        </span>
+
     </div>
 
 </div>
 
 
+<!-- ==========================================
+     MAIN CONTAINER
+========================================== -->
+
 <div class="container">
+
+
+    <!-- ======================================
+         DOCUMENT INFO
+    ======================================= -->
 
     <div class="info">
 
         <div>
+
             <strong>Document:</strong>
+
             <span id="documentId"></span>
+
         </div>
 
+
         <div>
+
             <strong>Version:</strong>
-            <span id="version">0</span>
+
+            <span id="version">
+                0
+            </span>
+
         </div>
 
     </div>
 
 
+    <!-- ======================================
+         ACTIVE USERS
+    ======================================= -->
+
+    <div class="active-users">
+
+        <h3>
+            👥 Active Users
+        </h3>
+
+        <div id="activeUsers">
+
+            <p>
+                No active users
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- ======================================
+         TEXT EDITOR
+    ======================================= -->
+
     <textarea
-            id="editor"
-            placeholder="Start writing..."
-            oninput="handleEditorInput()"
+        id="editor"
+        placeholder="Start writing..."
+        oninput="handleEditorInput()"
     ></textarea>
 
 
+    <!-- ======================================
+         MESSAGE
+    ======================================= -->
+
     <div
-            id="message"
-            class="message">
+        id="message"
+        class="message">
     </div>
+
 
 </div>
 
 
 <script>
 
+
     // ==========================================
-    // DOCUMENT
+    // DOCUMENT ID
     // ==========================================
 
-    const documentId = 2;
+    const params =
+        new URLSearchParams(
+            window.location.search
+        );
 
-    document.getElementById("documentId").innerText =
+
+    const documentId =
+        Number(
+            params.get("id")
+        );
+
+
+    if (!documentId) {
+
+        alert(
+            "Invalid document ID"
+        );
+
+        window.location.href =
+            "/dashboard.html";
+
+    }
+
+
+    document.getElementById(
+        "documentId"
+    ).innerText =
         documentId;
 
 
@@ -155,58 +336,114 @@
 
     let typingTimer = null;
 
+    let statusTimer = null;
+
     const debounceTime = 500;
 
-
-    const editor =
-        document.getElementById("editor");
-
-    const status =
-        document.getElementById("status");
-
-    const versionDisplay =
-        document.getElementById("version");
-
-    const messageBox =
-        document.getElementById("message");
+    const statusTimeout = 2000;
 
 
     // ==========================================
-    // GET EMAIL FROM JWT
+    // DOM ELEMENTS
+    // ==========================================
+
+    const editor =
+        document.getElementById(
+            "editor"
+        );
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    const versionDisplay =
+        document.getElementById(
+            "version"
+        );
+
+
+    const messageBox =
+        document.getElementById(
+            "message"
+        );
+
+
+    const activeUsersContainer =
+        document.getElementById(
+            "activeUsers"
+        );
+
+
+    // ==========================================
+    // JWT TOKEN
+    // ==========================================
+
+    const token =
+        localStorage.getItem(
+            "token"
+        );
+
+
+    if (!token) {
+
+        alert(
+            "Please login first."
+        );
+
+        window.location.href =
+            "/login.html";
+
+    }
+
+
+    // ==========================================
+    // GET USER EMAIL FROM JWT
     // ==========================================
 
     function getUserEmail() {
 
-        const token =
-            localStorage.getItem("token");
-
         if (!token) {
 
-            console.log("No JWT token found");
+            console.log(
+                "No JWT token found"
+            );
 
             return "unknown";
+
         }
+
 
         try {
 
             const payload =
                 token.split(".")[1];
 
+
             const decodedPayload =
                 JSON.parse(
+
                     atob(
+
                         payload
                             .replace(/-/g, "+")
                             .replace(/_/g, "/")
+
                     )
+
                 );
+
 
             console.log(
                 "Logged in user:",
                 decodedPayload.sub
             );
 
+
             return decodedPayload.sub;
+
 
         } catch (error) {
 
@@ -215,8 +452,11 @@
                 error
             );
 
+
             return "unknown";
+
         }
+
     }
 
 
@@ -234,19 +474,11 @@
             "Loading document..."
         );
 
-        const token =
-            localStorage.getItem("token");
 
         if (!token) {
 
-            alert(
-                "Please login first."
-            );
-
-            window.location.href =
-                "/login.html";
-
             return;
+
         }
 
 
@@ -254,15 +486,22 @@
 
             const response =
                 await fetch(
+
                     "/documents/" + documentId,
+
                     {
+
                         method: "GET",
 
                         headers: {
+
                             "Authorization":
                                 "Bearer " + token
+
                         }
+
                     }
+
                 );
 
 
@@ -280,29 +519,36 @@
                 );
 
                 return;
+
             }
 
 
-            const document =
+            const documentData =
                 await response.json();
 
 
             console.log(
                 "Document loaded:",
-                document
+                documentData
             );
 
 
-            // Content
+            // ==================================
+            // LOAD CONTENT
+            // ==================================
+
             editor.value =
-                document.content || "";
+                documentData.content || "";
 
 
-            // Version
+            // ==================================
+            // LOAD VERSION
+            // ==================================
+
             documentVersion =
-                document.version == null
+                documentData.version == null
                     ? 0
-                    : document.version;
+                    : documentData.version;
 
 
             versionDisplay.innerText =
@@ -314,32 +560,45 @@
                 documentVersion
             );
 
+
         } catch (error) {
 
             console.error(
                 "Load document error:",
                 error
             );
+
         }
+
     }
 
 
     // ==========================================
-    // WEBSOCKET
+    // WEBSOCKET CLIENT
     // ==========================================
 
     const client =
         new StompJs.Client({
 
             brokerURL:
-                "ws://localhost:8080/ws",
+                "ws://" +
+                window.location.host +
+                "/ws",
+
+            connectHeaders: {
+
+                Authorization:
+                    "Bearer " + token
+
+            },
 
             reconnectDelay: 5000
+
         });
 
 
     // ==========================================
-    // CONNECT
+    // WEBSOCKET CONNECT
     // ==========================================
 
     client.onConnect =
@@ -349,12 +608,19 @@
                 "WebSocket connected"
             );
 
+
             status.innerText =
                 "Connected";
 
 
+            // ==================================
+            // DOCUMENT EDIT SUBSCRIPTION
+            // ==================================
+
             client.subscribe(
-                "/topic/document/" + documentId,
+
+                "/topic/document/" +
+                documentId,
 
                 function (message) {
 
@@ -375,7 +641,8 @@
                     // ==================================
 
                     if (
-                        data.type === "CONFLICT"
+                        data.type ===
+                        "CONFLICT"
                     ) {
 
                         console.log(
@@ -392,9 +659,7 @@
                             documentVersion;
 
 
-                        /*
-                         * Load latest server content.
-                         */
+                        // Load latest server content
 
                         editor.value =
                             data.content || "";
@@ -406,6 +671,7 @@
 
 
                         return;
+
                     }
 
 
@@ -423,6 +689,7 @@
 
                         versionDisplay.innerText =
                             documentVersion;
+
                     }
 
 
@@ -432,16 +699,255 @@
                      */
 
                     if (
-                        data.userEmail !== userEmail
+                        data.userEmail !==
+                        userEmail
                     ) {
 
                         editor.value =
                             data.content || "";
+
                     }
 
                 }
+
             );
+
+
+            // ==================================
+            // PRESENCE SUBSCRIPTION
+            // ==================================
+
+            client.subscribe(
+
+                "/topic/document/" +
+                documentId +
+                "/presence",
+
+                function (message) {
+
+                    console.log(
+                        "Presence update:",
+                        message.body
+                    );
+
+
+                    const users =
+                        JSON.parse(
+                            message.body
+                        );
+
+
+                    displayActiveUsers(
+                        users
+                    );
+
+                }
+
+            );
+
+
+            // ==================================
+            // JOIN DOCUMENT
+            // ==================================
+
+            joinDocument();
+
         };
+
+
+    // ==========================================
+    // JOIN DOCUMENT
+    // ==========================================
+
+    function joinDocument() {
+
+        if (!client.connected) {
+
+            return;
+
+        }
+
+
+        console.log(
+            "Joining document:",
+            documentId
+        );
+
+
+        client.publish({
+
+            destination:
+                "/app/join",
+
+            body:
+                JSON.stringify({
+
+                    documentId:
+                        documentId
+
+                })
+
+        });
+
+    }
+
+
+    // ==========================================
+    // LEAVE DOCUMENT
+    // ==========================================
+
+    function leaveDocument() {
+
+        if (!client.connected) {
+
+            return;
+
+        }
+
+
+        console.log(
+            "Leaving document:",
+            documentId
+        );
+
+
+        client.publish({
+
+            destination:
+                "/app/leave",
+
+            body:
+                JSON.stringify({
+
+                    documentId:
+                        documentId
+
+                })
+
+        });
+
+    }
+
+
+    // ==========================================
+    // UPDATE USER STATUS
+    // ==========================================
+
+    function updateUserStatus(
+        newStatus
+    ) {
+
+        if (!client.connected) {
+
+            return;
+
+        }
+
+
+        client.publish({
+
+            destination:
+                "/app/status",
+
+            body:
+                JSON.stringify({
+
+                    documentId:
+                        documentId,
+
+                    status:
+                        newStatus
+
+                })
+
+        });
+
+    }
+
+
+    // ==========================================
+    // DISPLAY ACTIVE USERS
+    // ==========================================
+
+    function displayActiveUsers(
+        users
+    ) {
+
+        activeUsersContainer.innerHTML =
+            "";
+
+
+        if (
+            !users ||
+            users.length === 0
+        ) {
+
+            activeUsersContainer.innerHTML =
+                "<p>No active users</p>";
+
+            return;
+
+        }
+
+
+        users.forEach(
+            function (user) {
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                div.className =
+                    "active-user";
+
+
+                const name =
+                    user.name ||
+                    user.email ||
+                    "Unknown User";
+
+
+                const currentStatus =
+                    user.status ||
+                    "VIEWING";
+
+
+                const statusClass =
+                    currentStatus ===
+                    "EDITING"
+                        ? "editing"
+                        : "viewing";
+
+
+                const icon =
+                    currentStatus ===
+                    "EDITING"
+                        ? "🟢"
+                        : "🔵";
+
+
+                div.innerHTML = `
+
+                    <span class="user-name">
+                        ${icon} ${name}
+                    </span>
+
+                    <span class="user-status ${statusClass}">
+                        ${currentStatus}
+                    </span>
+
+                `;
+
+
+                activeUsersContainer
+                    .appendChild(div);
+
+            }
+        );
+
+    }
 
 
     // ==========================================
@@ -456,8 +962,10 @@
                 error
             );
 
+
             status.innerText =
                 "Connection Error";
+
         };
 
 
@@ -472,13 +980,15 @@
                 "WebSocket disconnected"
             );
 
+
             status.innerText =
                 "Disconnected";
+
         };
 
 
     // ==========================================
-    // HANDLE INPUT
+    // HANDLE EDITOR INPUT
     // ==========================================
 
     function handleEditorInput() {
@@ -488,24 +998,72 @@
         );
 
 
+        // ======================================
+        // USER IS EDITING
+        // ======================================
+
+        updateUserStatus(
+            "EDITING"
+        );
+
+
+        // ======================================
+        // CLEAR OLD TIMERS
+        // ======================================
+
         clearTimeout(
             typingTimer
         );
 
 
+        clearTimeout(
+            statusTimer
+        );
+
+
+        // ======================================
+        // SEND EDIT AFTER 500ms
+        // ======================================
+
         typingTimer =
             setTimeout(
+
                 function () {
 
                     console.log(
                         "Calling sendEdit()"
                     );
 
+
                     sendEdit();
 
                 },
+
                 debounceTime
+
             );
+
+
+        // ======================================
+        // CHANGE BACK TO VIEWING
+        // AFTER 2 SECONDS
+        // ======================================
+
+        statusTimer =
+            setTimeout(
+
+                function () {
+
+                    updateUserStatus(
+                        "VIEWING"
+                    );
+
+                },
+
+                statusTimeout
+
+            );
+
     }
 
 
@@ -527,6 +1085,7 @@
             );
 
             return;
+
         }
 
 
@@ -537,6 +1096,7 @@
         console.log(
             "Sending edit:",
             {
+
                 documentId:
                     documentId,
 
@@ -548,6 +1108,7 @@
 
                 content:
                     content
+
             }
         );
 
@@ -556,6 +1117,7 @@
 
             destination:
                 "/app/edit",
+
 
             body:
                 JSON.stringify({
@@ -574,45 +1136,76 @@
 
                     type:
                         "EDIT"
+
                 })
+
         });
+
     }
 
 
     // ==========================================
-    // MESSAGE
+    // SHOW MESSAGE
     // ==========================================
 
-    function showMessage(text) {
+    function showMessage(
+        text
+    ) {
 
         messageBox.innerText =
             text;
+
 
         messageBox.style.display =
             "block";
 
 
         setTimeout(
+
             function () {
 
                 messageBox.style.display =
                     "none";
 
             },
+
             4000
+
         );
+
     }
 
 
     // ==========================================
-    // START
+    // PAGE CLOSE / NAVIGATION
+    // ==========================================
+
+    window.addEventListener(
+        "beforeunload",
+        function () {
+
+            leaveDocument();
+
+        }
+    );
+
+
+    // ==========================================
+    // START WEBSOCKET
     // ==========================================
 
     client.activate();
 
+
+    // ==========================================
+    // LOAD DOCUMENT
+    // ==========================================
+
     loadDocument();
 
+
 </script>
+
 
 </body>
 

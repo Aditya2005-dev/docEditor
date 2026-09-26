@@ -1,10 +1,13 @@
 package com.example.doc_editor.document;
 
+import com.example.doc_editor.document.dto.DocumentRequest;
+
+import jakarta.validation.Valid;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/documents")
@@ -16,10 +19,13 @@ public class DocumentController {
         this.documentService = documentService;
     }
 
+    // ==========================================
+    // CREATE DOCUMENT
+    // ==========================================
 
     @PostMapping
     public Document createDocument(
-            @RequestBody Map<String, String> request,
+            @Valid @RequestBody DocumentRequest request,
             Authentication authentication
     ) {
 
@@ -27,11 +33,14 @@ public class DocumentController {
 
         return documentService.createDocument(
                 email,
-                request.get("title"),
-                request.get("content")
+                request.getTitle(),
+                request.getContent()
         );
     }
 
+    // ==========================================
+    // MY DOCUMENTS
+    // ==========================================
 
     @GetMapping
     public List<Document> getMyDocuments(
@@ -43,6 +52,9 @@ public class DocumentController {
         return documentService.getMyDocuments(email);
     }
 
+    // ==========================================
+    // GET DOCUMENT
+    // ==========================================
 
     @GetMapping("/{id}")
     public Document getDocument(
@@ -58,11 +70,14 @@ public class DocumentController {
         );
     }
 
+    // ==========================================
+    // UPDATE DOCUMENT
+    // ==========================================
 
     @PutMapping("/{id}")
     public Document updateDocument(
             @PathVariable Long id,
-            @RequestBody Map<String, String> request,
+            @Valid @RequestBody DocumentRequest request,
             Authentication authentication
     ) {
 
@@ -71,11 +86,14 @@ public class DocumentController {
         return documentService.updateDocument(
                 id,
                 email,
-                request.get("title"),
-                request.get("content")
+                request.getTitle(),
+                request.getContent()
         );
     }
 
+    // ==========================================
+    // DELETE DOCUMENT
+    // ==========================================
 
     @DeleteMapping("/{id}")
     public String deleteDocument(
