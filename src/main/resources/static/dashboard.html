@@ -4,137 +4,176 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Documents - DocEditor</title>
 
-    <title>Dashboard - DocEditor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
-    <link
-        rel="stylesheet"
-        href="/css/style.css"
-    >
+    <link rel="stylesheet" href="/css/style.css">
 
 </head>
 
-
 <body>
 
+<!-- ==========================================
+     TOP BAR
+=========================================== -->
 
-<div class="dashboard">
+<header class="topbar">
+
+    <div class="topbar-nav">
+        <div class="brand">
+            <span class="brand-mark">D</span>
+            <span class="brand-name">DocEditor</span>
+        </div>
+        <span class="topbar-nav-item">Documents</span>
+    </div>
+
+    <div class="topbar-right">
+        <div class="topbar-user">
+            <span class="avatar" id="userAvatar" style="background: var(--accent-solid);"></span>
+            <span class="topbar-user-email" id="userEmail"></span>
+        </div>
+        <button class="btn-secondary btn-sm" onclick="logout()">Log out</button>
+    </div>
+
+</header>
+
+
+<div class="page">
+
+    <!-- ==========================================
+         SHARE REQUESTS
+    =========================================== -->
+
+    <section class="requests-panel" id="requestsPanel" style="display: none;">
+
+        <div class="requests-panel-header">
+            <h2>Share requests</h2>
+            <span class="badge badge-count" id="requestsBadge">0</span>
+        </div>
+
+        <div id="requestsList"></div>
+
+    </section>
 
 
     <!-- ==========================================
-         HEADER
+         HEADER + NEW DOCUMENT
     =========================================== -->
 
-    <header class="dashboard-header">
+    <div class="page-header">
 
         <div>
-
-            <div class="logo">
-                Doc<span>Editor</span>
-            </div>
-
-            <p class="dashboard-subtitle">
-                Your documents
-            </p>
-
+            <h1>Your <span class="gradient-text">workspace</span></h1>
+            <p>Create, edit and collaborate on documents.</p>
         </div>
 
+        <button class="btn-primary" onclick="toggleCreatePanel()">+ New document</button>
 
-        <button
-            class="logout-button"
-            onclick="logout()"
-        >
-            Logout
-        </button>
-
-    </header>
+    </div>
 
 
     <!-- ==========================================
-         CREATE DOCUMENT
+         CREATE DOCUMENT (hidden until "+ New document")
     =========================================== -->
 
-    <section class="create-section">
+    <section class="create-panel" id="createPanel" style="display: none;">
 
-        <h2>
-            Create New Document
-        </h2>
+        <div class="field">
+            <label for="title">Title</label>
+            <input type="text" id="title" placeholder="Document title">
+        </div>
 
+        <div class="field">
+            <label for="content">Content</label>
+            <textarea id="content" rows="4" placeholder="Start writing..."></textarea>
+        </div>
 
-        <input
-            type="text"
-            id="title"
-            placeholder="Document title"
-        >
+        <div class="create-panel-actions">
+            <button class="btn-primary" onclick="createDocument()">Create document</button>
+            <button class="btn-ghost" onclick="toggleCreatePanel()">Cancel</button>
+        </div>
 
-
-        <textarea
-            id="content"
-            placeholder="Start writing..."
-        ></textarea>
-
-
-        <button
-            onclick="createDocument()"
-        >
-            Create Document
-        </button>
-
-
-        <p id="createMessage"></p>
+        <p id="createMessage" class="form-message" style="text-align: left;"></p>
 
     </section>
 
 
     <!-- ==========================================
-         DOCUMENTS
+         TABS
     =========================================== -->
 
-    <section class="documents-section">
+    <div class="tabs">
+        <button class="tab is-active" id="tabMine" onclick="switchTab('mine')">My documents</button>
+        <button class="tab" id="tabShared" onclick="switchTab('shared')">Shared with me</button>
+    </div>
 
 
-        <div class="section-header">
+    <!-- ==========================================
+         MY DOCUMENTS
+    =========================================== -->
 
-            <h2>
-                My Documents
-            </h2>
-
-
-            <button
-                onclick="loadDocuments()"
-            >
-                Refresh
-            </button>
-
+    <div id="myDocumentsView">
+        <div class="doc-list" id="documents">
+            <p class="loading-state">Loading documents...</p>
         </div>
+    </div>
 
 
-        <div id="documents">
+    <!-- ==========================================
+         SHARED WITH ME
+    =========================================== -->
 
-            <p class="loading">
-                Loading documents...
-            </p>
-
+    <div id="sharedDocumentsView" style="display: none;">
+        <div class="doc-list" id="sharedDocuments">
+            <p class="loading-state">Loading documents...</p>
         </div>
-
-
-    </section>
-
+    </div>
 
 </div>
 
 
 <!-- ==========================================
-     JAVASCRIPT
+     SHARE MODAL
 =========================================== -->
 
-<script src="/js/dashboard.js"></script>
+<div class="modal-overlay" id="shareModal" hidden>
 
+    <div class="modal">
+
+        <h2>Share document</h2>
+        <p class="subtitle">Give someone access to this document.</p>
+
+        <div class="field">
+            <label for="shareEmail">Email address</label>
+            <input type="email" id="shareEmail" placeholder="teammate@example.com">
+        </div>
+
+        <div class="field">
+            <label for="sharePermission">Permission</label>
+            <select id="sharePermission">
+                <option value="VIEWER">Viewer</option>
+                <option value="EDITOR">Editor</option>
+            </select>
+        </div>
+
+        <p id="shareMessage" class="form-message" style="text-align: left;"></p>
+
+        <div class="modal-actions">
+            <button class="btn-ghost" id="shareCancelBtn" onclick="closeShareModal()">Cancel</button>
+            <button class="btn-primary" id="shareSubmitBtn" onclick="submitShare()">Send request</button>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="/js/dashboard.js"></script>
 
 </body>
 

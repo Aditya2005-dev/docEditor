@@ -1,8 +1,11 @@
 package com.example.doc_editor.document;
 
 import com.example.doc_editor.document.permission.DocumentPermission;
+import com.example.doc_editor.document.permission.DocumentShareRequest;
+import com.example.doc_editor.document.permission.DocumentShareRequestRepository;
 import com.example.doc_editor.document.permission.Permission;
 import com.example.doc_editor.document.permission.PermissionRepository;
+import com.example.doc_editor.document.permission.ShareRequestStatus;
 import com.example.doc_editor.exception.AccessDeniedException;
 import com.example.doc_editor.exception.DocumentNotFoundException;
 import com.example.doc_editor.user.User;
@@ -18,20 +21,26 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final UserRepository userRepository;
     private final PermissionRepository permissionRepository;
+    private final DocumentShareRequestRepository shareRequestRepository;
+
 
     public DocumentService(
             DocumentRepository documentRepository,
             UserRepository userRepository,
-            PermissionRepository permissionRepository
+            PermissionRepository permissionRepository,
+            DocumentShareRequestRepository shareRequestRepository
     ) {
+
         this.documentRepository = documentRepository;
         this.userRepository = userRepository;
         this.permissionRepository = permissionRepository;
+        this.shareRequestRepository = shareRequestRepository;
     }
 
-    // ==========================================
+
+    // =========================================
     // CREATE DOCUMENT
-    // ==========================================
+    // =========================================
 
     public Document createDocument(
             String email,
@@ -42,14 +51,19 @@ public class DocumentService {
         User user = getUser(email);
 
         Document document =
-                new Document(title, content, user);
+                new Document(
+                        title,
+                        content,
+                        user
+                );
 
         return documentRepository.save(document);
     }
 
-    // ==========================================
+
+    // =========================================
     // MY DOCUMENTS
-    // ==========================================
+    // =========================================
 
     public List<Document> getMyDocuments(
             String email
@@ -61,9 +75,10 @@ public class DocumentService {
                 .findByOwnerId(user.getId());
     }
 
-    // ==========================================
+
+    // =========================================
     // SHARED DOCUMENTS
-    // ==========================================
+    // =========================================
 
     public List<Document> getSharedDocuments(
             String email
@@ -72,9 +87,8 @@ public class DocumentService {
         User user = getUser(email);
 
         List<DocumentPermission> permissions =
-                permissionRepository.findByUserId(
-                        user.getId()
-                );
+                permissionRepository
+                        .findByUserId(user.getId());
 
         return permissions
                 .stream()
@@ -82,9 +96,10 @@ public class DocumentService {
                 .toList();
     }
 
-    // ==========================================
+
+    // =========================================
     // GET DOCUMENT
-    // ==========================================
+    // =========================================
 
     public Document getDocument(
             Long documentId,
@@ -93,22 +108,26 @@ public class DocumentService {
 
         User user = getUser(email);
 
-        Document document = documentRepository
-                .findById(documentId)
-                .orElseThrow(() ->
-                        new DocumentNotFoundException(
-                                "Document not found"
-                        )
-                );
+        Document document =
+                documentRepository
+                        .findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found"
+                                )
+                        );
 
-        // Owner has access
-        if (document.getOwner().getId()
+
+        // Owner
+        if (document.getOwner()
+                .getId()
                 .equals(user.getId())) {
 
             return document;
         }
 
-        // Check shared permission
+
+        // Shared user
         permissionRepository
                 .findByDocumentIdAndUserId(
                         documentId,
@@ -123,9 +142,10 @@ public class DocumentService {
         return document;
     }
 
-    // ==========================================
+
+    // =========================================
     // UPDATE DOCUMENT
-    // ==========================================
+    // =========================================
 
     public Document updateDocument(
             Long documentId,
@@ -136,16 +156,19 @@ public class DocumentService {
 
         User user = getUser(email);
 
-        Document document = documentRepository
-                .findById(documentId)
-                .orElseThrow(() ->
-                        new DocumentNotFoundException(
-                                "Document not found"
-                        )
-                );
+        Document document =
+                documentRepository
+                        .findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found"
+                                )
+                        );
 
-        // Owner can edit
-        if (document.getOwner().getId()
+
+        // Owner
+        if (document.getOwner()
+                .getId()
                 .equals(user.getId())) {
 
             document.setTitle(title);
@@ -154,7 +177,8 @@ public class DocumentService {
             return documentRepository.save(document);
         }
 
-        // Check shared permission
+
+        // Shared user
         DocumentPermission permission =
                 permissionRepository
                         .findByDocumentIdAndUserId(
@@ -167,7 +191,7 @@ public class DocumentService {
                                 )
                         );
 
-        // Viewer cannot edit
+
         if (permission.getPermission()
                 != Permission.EDITOR) {
 
@@ -176,15 +200,17 @@ public class DocumentService {
             );
         }
 
+
         document.setTitle(title);
         document.setContent(content);
 
         return documentRepository.save(document);
     }
 
-    // ==========================================
-    // SHARE DOCUMENT
-    // ==========================================
+
+    // =========================================
+    // SEND SHARE REQUEST
+    // =========================================
 
     public String shareDocument(
             Long documentId,
@@ -195,16 +221,20 @@ public class DocumentService {
 
         User owner = getUser(ownerEmail);
 
-        Document document = documentRepository
-                .findById(documentId)
-                .orElseThrow(() ->
-                        new DocumentNotFoundException(
-                                "Document not found"
-                        )
-                );
+
+        Document document =
+                documentRepository
+                        .findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found"
+                                )
+                        );
+
 
         // Only owner can share
-        if (!document.getOwner().getId()
+        if (!document.getOwner()
+                .getId()
                 .equals(owner.getId())) {
 
             throw new AccessDeniedException(
@@ -212,56 +242,202 @@ public class DocumentService {
             );
         }
 
-        User userToShare =
+
+        User receiver =
                 getUser(userEmail);
 
-        // Owner cannot share with himself
+
+        // Cannot share with yourself
         if (owner.getId()
-                .equals(userToShare.getId())) {
+                .equals(receiver.getId())) {
 
             throw new AccessDeniedException(
-                    "Owner already has access"
+                    "You cannot share a document with yourself"
             );
         }
 
-        // Check if permission already exists
-        var existingPermission =
-                permissionRepository
-                        .findByDocumentIdAndUserId(
-                                documentId,
-                                userToShare.getId()
-                        );
 
-        if (existingPermission.isPresent()) {
+        // Already has access
+        if (permissionRepository
+                .findByDocumentIdAndUserId(
+                        documentId,
+                        receiver.getId()
+                )
+                .isPresent()) {
 
-            existingPermission
-                    .get()
-                    .setPermission(permission);
-
-            permissionRepository.save(
-                    existingPermission.get()
+            throw new AccessDeniedException(
+                    "User already has access to this document"
             );
-
-            return "Permission updated";
         }
 
-        DocumentPermission newPermission =
-                new DocumentPermission(
+
+        // Existing pending request
+        if (shareRequestRepository
+                .existsByDocumentIdAndReceiverIdAndStatus(
+                        documentId,
+                        receiver.getId(),
+                        ShareRequestStatus.PENDING
+                )) {
+
+            return "Share request already pending";
+        }
+
+
+        DocumentShareRequest request =
+                new DocumentShareRequest(
                         document,
-                        userToShare,
+                        owner,
+                        receiver,
                         permission
                 );
 
-        permissionRepository.save(
-                newPermission
-        );
 
-        return "Document shared successfully";
+        shareRequestRepository.save(request);
+
+
+        return "Share request sent successfully";
     }
 
-    // ==========================================
-    // GET MEMBERS
-    // ==========================================
+
+    // =========================================
+    // GET PENDING REQUESTS
+    // =========================================
+
+    public List<DocumentShareRequest>
+    getPendingRequests(
+            String email
+    ) {
+
+        User user = getUser(email);
+
+        return shareRequestRepository
+                .findByReceiverIdAndStatusOrderByCreatedAtDesc(
+                        user.getId(),
+                        ShareRequestStatus.PENDING
+                );
+    }
+
+
+    // =========================================
+    // ACCEPT SHARE REQUEST
+    // =========================================
+
+    public String acceptShareRequest(
+            Long requestId,
+            String email
+    ) {
+
+        User receiver = getUser(email);
+
+
+        DocumentShareRequest request =
+                shareRequestRepository
+                        .findByIdAndReceiverId(
+                                requestId,
+                                receiver.getId()
+                        )
+                        .orElseThrow(() ->
+                                new AccessDeniedException(
+                                        "Share request not found"
+                                )
+                        );
+
+
+        if (request.getStatus()
+                != ShareRequestStatus.PENDING) {
+
+            return "Request already processed";
+        }
+
+
+        DocumentPermission permission =
+                permissionRepository
+                        .findByDocumentIdAndUserId(
+                                request.getDocument().getId(),
+                                receiver.getId()
+                        )
+                        .orElse(null);
+
+
+        if (permission == null) {
+
+            permission =
+                    new DocumentPermission(
+                            request.getDocument(),
+                            receiver,
+                            request.getPermission()
+                    );
+
+        } else {
+
+            permission.setPermission(
+                    request.getPermission()
+            );
+        }
+
+
+        permissionRepository.save(permission);
+
+
+        request.setStatus(
+                ShareRequestStatus.ACCEPTED
+        );
+
+
+        shareRequestRepository.save(request);
+
+
+        return "Share request accepted";
+    }
+
+
+    // =========================================
+    // DECLINE SHARE REQUEST
+    // =========================================
+
+    public String declineShareRequest(
+            Long requestId,
+            String email
+    ) {
+
+        User receiver = getUser(email);
+
+
+        DocumentShareRequest request =
+                shareRequestRepository
+                        .findByIdAndReceiverId(
+                                requestId,
+                                receiver.getId()
+                        )
+                        .orElseThrow(() ->
+                                new AccessDeniedException(
+                                        "Share request not found"
+                                )
+                        );
+
+
+        if (request.getStatus()
+                != ShareRequestStatus.PENDING) {
+
+            return "Request already processed";
+        }
+
+
+        request.setStatus(
+                ShareRequestStatus.DECLINED
+        );
+
+
+        shareRequestRepository.save(request);
+
+
+        return "Share request declined";
+    }
+
+
+    // =========================================
+    // MEMBERS
+    // =========================================
 
     public List<DocumentPermission> getMembers(
             Long documentId,
@@ -270,15 +446,18 @@ public class DocumentService {
 
         User user = getUser(email);
 
-        Document document = documentRepository
-                .findById(documentId)
-                .orElseThrow(() ->
-                        new DocumentNotFoundException(
-                                "Document not found"
-                        )
-                );
+        Document document =
+                documentRepository
+                        .findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found"
+                                )
+                        );
 
-        if (!document.getOwner().getId()
+
+        if (!document.getOwner()
+                .getId()
                 .equals(user.getId())) {
 
             throw new AccessDeniedException(
@@ -286,13 +465,15 @@ public class DocumentService {
             );
         }
 
+
         return permissionRepository
                 .findByDocumentId(documentId);
     }
 
-    // ==========================================
-    // DELETE DOCUMENT
-    // ==========================================
+
+    // =========================================
+    // DELETE
+    // =========================================
 
     public String deleteDocument(
             Long documentId,
@@ -301,15 +482,18 @@ public class DocumentService {
 
         User user = getUser(email);
 
-        Document document = documentRepository
-                .findById(documentId)
-                .orElseThrow(() ->
-                        new DocumentNotFoundException(
-                                "Document not found"
-                        )
-                );
+        Document document =
+                documentRepository
+                        .findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found"
+                                )
+                        );
 
-        if (!document.getOwner().getId()
+
+        if (!document.getOwner()
+                .getId()
                 .equals(user.getId())) {
 
             throw new AccessDeniedException(
@@ -317,14 +501,16 @@ public class DocumentService {
             );
         }
 
+
         documentRepository.delete(document);
 
         return "Document deleted successfully";
     }
 
-    // ==========================================
-    // CHECK VIEW ACCESS
-    // ==========================================
+
+    // =========================================
+    // VIEW ACCESS
+    // =========================================
 
     public boolean canViewDocument(
             Long documentId,
@@ -339,9 +525,10 @@ public class DocumentService {
         return true;
     }
 
-    // ==========================================
-    // CHECK EDIT ACCESS
-    // ==========================================
+
+    // =========================================
+    // EDIT ACCESS
+    // =========================================
 
     public boolean canEditDocument(
             Long documentId,
@@ -350,22 +537,25 @@ public class DocumentService {
 
         User user = getUser(email);
 
-        Document document = documentRepository
-                .findById(documentId)
-                .orElseThrow(() ->
-                        new DocumentNotFoundException(
-                                "Document not found"
-                        )
-                );
+        Document document =
+                documentRepository
+                        .findById(documentId)
+                        .orElseThrow(() ->
+                                new DocumentNotFoundException(
+                                        "Document not found"
+                                )
+                        );
 
-        // Owner can edit
-        if (document.getOwner().getId()
+
+        // Owner
+        if (document.getOwner()
+                .getId()
                 .equals(user.getId())) {
 
             return true;
         }
 
-        // Check shared permission
+
         DocumentPermission permission =
                 permissionRepository
                         .findByDocumentIdAndUserId(
@@ -378,7 +568,7 @@ public class DocumentService {
                                 )
                         );
 
-        // Only EDITOR can edit
+
         if (permission.getPermission()
                 != Permission.EDITOR) {
 
@@ -387,14 +577,18 @@ public class DocumentService {
             );
         }
 
+
         return true;
     }
 
-    // ==========================================
-    // GET USER
-    // ==========================================
 
-    private User getUser(String email) {
+    // =========================================
+    // USER
+    // =========================================
+
+    private User getUser(
+            String email
+    ) {
 
         return userRepository
                 .findByEmail(email)

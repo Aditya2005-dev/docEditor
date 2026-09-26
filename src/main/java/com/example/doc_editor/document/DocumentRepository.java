@@ -1,5 +1,6 @@
 package com.example.doc_editor.document;
 
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -7,11 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface DocumentRepository
-        extends JpaRepository<Document, Long> {
+public interface DocumentRepository extends JpaRepository<Document, Long> {
 
     List<Document> findByOwnerId(Long ownerId);
 
+
+    @Transactional
     @Modifying
     @Query("""
             UPDATE Document d

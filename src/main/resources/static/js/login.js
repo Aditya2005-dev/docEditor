@@ -2,64 +2,50 @@ async function login(event) {
 
     event.preventDefault();
 
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
-    const email =
-        document.getElementById("email").value;
-
-    const password =
-        document.getElementById("password").value;
-
+    const message = document.getElementById("message");
+    message.className = "form-message";
+    message.innerText = "";
 
     try {
 
-        const response = await fetch(
-            "/auth/login",
-            {
-                method: "POST",
+        const response = await fetch("/auth/login", {
 
-                headers: {
-                    "Content-Type": "application/json"
-                },
+            method: "POST",
 
-                body: JSON.stringify({
-                    email: email,
-                    password: password
-                })
-            }
-        );
+            headers: {
+                "Content-Type": "application/json"
+            },
 
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+
+        });
 
         if (!response.ok) {
 
-            document.getElementById("message").innerText =
-                "Invalid email or password.";
+            message.classList.add("is-error");
+            message.innerText = "Invalid email or password.";
 
             return;
         }
 
-
-        const data =
-            await response.json();
-
+        const data = await response.json();
 
         // Store JWT in browser
-
-        localStorage.setItem(
-            "token",
-            data.token
-        );
-
+        localStorage.setItem("token", data.token);
 
         // Go to dashboard
-
-        window.location.href =
-            "/dashboard.html";
-
+        window.location.href = "/dashboard.html";
 
     } catch (error) {
 
-        document.getElementById("message").innerText =
-            "Server error. Please try again.";
+        message.classList.add("is-error");
+        message.innerText = "Server error. Please try again.";
 
         console.error(error);
     }

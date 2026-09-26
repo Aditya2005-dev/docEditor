@@ -6,7 +6,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Login - DocEditor</title>
+    <title>Log in - DocEditor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/style.css">
 
@@ -14,63 +18,72 @@
 
 <body>
 
-<div class="auth-container">
+<div class="auth-layout">
 
-    <div class="logo">
-        Doc<span>Editor</span>
+    <!-- LEFT: brand panel -->
+    <div class="auth-side">
+        <div class="auth-side-inner">
+
+            <div class="brand brand--on-dark">
+                <span class="brand-mark">D</span>
+                <span class="brand-name">DocEditor</span>
+            </div>
+
+            <h1>Real-time documents,<br>made for teams.</h1>
+
+            <ul>
+                <li>Real-time multi-user editing</li>
+                <li>Share documents as viewer or editor</li>
+                <li>See who's active on a document, live</li>
+            </ul>
+
+            <div class="auth-doc-shape">
+                <span></span>
+                <span></span>
+            </div>
+
+        </div>
     </div>
 
-    <h1>Welcome Back</h1>
+    <!-- RIGHT: form -->
+    <div class="auth-form-side">
+        <div class="auth-card">
 
-    <p class="subtitle">
-        Login to your account
-    </p>
+            <div class="brand">
+                <span class="brand-mark">D</span>
+                <span class="brand-name">DocEditor</span>
+            </div>
 
+            <h2>Welcome back</h2>
+            <p class="subtitle">Log in to your account</p>
 
-    <form onsubmit="login(event)">
+            <form onsubmit="login(event)">
 
-        <label>Email</label>
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="you@example.com" required>
+                </div>
 
-        <input
-                type="email"
-                id="email"
-                placeholder="Enter your email"
-                required
-        >
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="Enter your password" required>
+                </div>
 
+                <button type="submit" class="btn-primary btn-block">Log in</button>
 
-        <label>Password</label>
+            </form>
 
-        <input
-                type="password"
-                id="password"
-                placeholder="Enter your password"
-                required
-        >
+            <p id="message" class="form-message"></p>
 
+            <p class="bottom-text">
+                Don't have an account?
+                <a href="/register.html">Create one</a>
+            </p>
 
-        <button type="submit">
-            Login
-        </button>
-
-    </form>
-
-
-    <p id="message" class="message"></p>
-
-
-    <p class="bottom-text">
-
-        Don't have an account?
-
-        <a href="/register.html">
-            Create Account
-        </a>
-
-    </p>
+        </div>
+    </div>
 
 </div>
-
 
 <script src="/js/login.js"></script>
 

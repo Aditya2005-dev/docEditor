@@ -6,7 +6,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Register - DocEditor</title>
+    <title>Create account - DocEditor</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="/css/style.css">
 
@@ -14,71 +18,77 @@
 
 <body>
 
-<div class="auth-container">
+<div class="auth-layout">
 
-    <div class="logo">
-        Doc<span>Editor</span>
+    <!-- LEFT: brand panel -->
+    <div class="auth-side">
+        <div class="auth-side-inner">
+
+            <div class="brand brand--on-dark">
+                <span class="brand-mark">D</span>
+                <span class="brand-name">DocEditor</span>
+            </div>
+
+            <h1>Real-time documents,<br>made for teams.</h1>
+
+            <ul>
+                <li>Real-time multi-user editing</li>
+                <li>Share documents as viewer or editor</li>
+                <li>See who's active on a document, live</li>
+            </ul>
+
+            <div class="auth-doc-shape">
+                <span></span>
+                <span></span>
+            </div>
+
+        </div>
     </div>
 
-    <h1>Create Account</h1>
+    <!-- RIGHT: form -->
+    <div class="auth-form-side">
+        <div class="auth-card">
 
-    <p class="subtitle">
-        Create your DocEditor account
-    </p>
+            <div class="brand">
+                <span class="brand-mark">D</span>
+                <span class="brand-name">DocEditor</span>
+            </div>
 
+            <h2>Create your account</h2>
+            <p class="subtitle">Start writing with your team</p>
 
-    <form onsubmit="register(event)">
+            <form onsubmit="register(event)">
 
-        <label>Name</label>
+                <div class="field">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" placeholder="Your name" required>
+                </div>
 
-        <input
-                type="text"
-                id="name"
-                placeholder="Enter your name"
-                required
-        >
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="you@example.com" required>
+                </div>
 
+                <div class="field">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" placeholder="At least 8 characters" minlength="8" required>
+                </div>
 
-        <label>Email</label>
+                <button type="submit" class="btn-primary btn-block">Create account</button>
 
-        <input
-                type="email"
-                id="email"
-                placeholder="Enter your email"
-                required
-        >
+            </form>
 
+            <p id="message" class="form-message"></p>
 
-        <label>Password</label>
+            <p class="bottom-text">
+                Already have an account?
+                <a href="/login.html">Log in</a>
+            </p>
 
-        <input
-                type="password"
-                id="password"
-                placeholder="Enter your password"
-                required
-        >
-
-
-        <button type="submit">
-            Create Account
-        </button>
-
-    </form>
-
-
-    <p id="message" class="message"></p>
-
-
-    <p class="bottom-text">
-        Already have an account?
-
-        <a href="/login.html">
-            Login
-        </a>
-    </p>
+        </div>
+    </div>
 
 </div>
-
 
 <script src="/js/register.js"></script>
 

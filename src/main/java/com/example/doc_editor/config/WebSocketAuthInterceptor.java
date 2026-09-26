@@ -2,17 +2,16 @@ package com.example.doc_editor.config;
 
 import com.example.doc_editor.security.JwtService;
 
+import java.security.Principal;
+import java.util.Collections;
+
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-
 import org.springframework.stereotype.Component;
-
-import java.util.Collections;
 
 @Component
 public class WebSocketAuthInterceptor implements ChannelInterceptor {
@@ -32,33 +31,73 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor =
                 StompHeaderAccessor.wrap(message);
 
-        // Check only when client connects
+
+        // ==========================================
+        // STOMP CONNECT
+        // ==========================================
+
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
 
-            String authorization =
-                    accessor.getFirstNativeHeader("Authorization");
+            System.out.println(
+                    "========== STOMP CONNECT =========="
+            );
 
-            // No JWT
-            if (authorization == null
-                    || !authorization.startsWith("Bearer ")) {
+
+            String authorization =
+                    accessor.getFirstNativeHeader(
+                            "Authorization"
+                    );
+
+
+            System.out.println(
+                    "STOMP AUTH HEADER: " +
+                    (authorization != null)
+            );
+
+
+            if (
+                    authorization == null ||
+                    !authorization.startsWith("Bearer ")
+            ) {
+
+                System.out.println(
+                        "STOMP AUTH FAILED"
+                );
 
                 return null;
             }
 
-            // Remove "Bearer "
+
             String token =
                     authorization.substring(7);
 
-            // Invalid JWT
+
+            System.out.println(
+                    "STOMP JWT VALID: " +
+                    jwtService.isTokenValid(token)
+            );
+
+
             if (!jwtService.isTokenValid(token)) {
+
+                System.out.println(
+                        "STOMP JWT INVALID"
+                );
+
                 return null;
             }
 
-            // Get email from JWT
+
             String email =
                     jwtService.extractEmail(token);
 
-            // Create authenticated user
+
+            System.out.println(
+                    "STOMP USER: " +
+                    email
+            );
+
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(
                             email,
@@ -66,9 +105,23 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                             Collections.emptyList()
                     );
 
-            // Attach user to WebSocket session
+
+            /*
+             * IMPORTANT:
+             * Attach the authenticated user
+             * to the STOMP session.
+             */
+
             accessor.setUser(authentication);
+
+
+            System.out.println(
+                    "STOMP PRINCIPAL SET: " +
+                    accessor.getUser()
+            );
+
         }
+
 
         return message;
     }

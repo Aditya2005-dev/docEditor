@@ -7,38 +7,43 @@
 
     <title>DocEditor</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
 
-<div class="home-container">
+<div class="home-shell">
+    <div class="home-container">
 
-    <div class="logo">
-        Doc<span>Editor</span>
+        <div class="brand" style="justify-content: center; width: 100%;">
+            <span class="brand-mark">D</span>
+            <span class="brand-name">DocEditor</span>
+        </div>
+
+        <h1>Collaborative document editing,<br>built for teams.</h1>
+
+        <p>
+            Write together in real time, share documents with the right
+            permissions, and pick up right where you left off.
+        </p>
+
+        <div class="home-buttons">
+
+            <a href="/login.html">
+                <button class="btn-primary">Log in</button>
+            </a>
+
+            <a href="/register.html">
+                <button class="btn-secondary">Create account</button>
+            </a>
+
+        </div>
+
     </div>
-
-    <h1>Collaborative Document Editor</h1>
-
-    <p>
-        Create, edit and manage your documents
-        in one place.
-    </p>
-
-    <div class="home-buttons">
-
-        <a href="/login.html">
-            <button>Login</button>
-        </a>
-
-        <a href="/register.html">
-            <button class="secondary">
-                Create Account
-            </button>
-        </a>
-
-    </div>
-
 </div>
 
 </body>
