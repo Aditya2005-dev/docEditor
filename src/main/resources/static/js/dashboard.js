@@ -577,89 +577,150 @@ function closeShareModal() {
 
 async function submitShare() {
 
-    // Guard: ignore extra clicks while a request is already running.
+    // Prevent double clicks
     if (shareRequestInFlight) {
         return;
     }
 
-    const email = document.getElementById("shareEmail").value;
-    const permission = document.getElementById("sharePermission").value;
-    const message = document.getElementById("shareMessage");
-    const submitBtn = document.getElementById("shareSubmitBtn");
-    const cancelBtn = document.getElementById("shareCancelBtn");
+    const email =
+        document.getElementById("shareEmail").value.trim();
+
+    const permission =
+        document.getElementById("sharePermission").value;
+
+    const message =
+        document.getElementById("shareMessage");
+
+    const submitBtn =
+        document.getElementById("shareSubmitBtn");
+
+    const cancelBtn =
+        document.getElementById("shareCancelBtn");
+
 
     message.className = "form-message";
 
+
+    // Validate email
     if (!email) {
+
         message.classList.add("is-error");
-        message.innerText = "Please enter an email address.";
+        message.innerText =
+            "Please enter an email address.";
+
         return;
     }
 
+
     shareRequestInFlight = true;
+
     submitBtn.disabled = true;
     cancelBtn.disabled = true;
+
     submitBtn.innerText = "Sending...";
+
 
     try {
 
-        const response = await fetch(
-            "/documents/" + activeShareDocumentId + "/share",
-            {
+        /*
+         * Backend expects:
+         *
+         * POST /documents/{id}/share
+         *      ?email=...
+         *      &permission=VIEWER
+         *
+         * NOT JSON request body.
+         */
+
+        const url =
+            "/documents/" +
+            activeShareDocumentId +
+            "/share" +
+            "?email=" +
+            encodeURIComponent(email) +
+            "&permission=" +
+            encodeURIComponent(permission);
+
+
+        const response =
+            await fetch(url, {
 
                 method: "POST",
 
                 headers: {
-                    "Authorization": "Bearer " + token,
-                    "Content-Type": "application/json"
-                },
+                    "Authorization":
+                        "Bearer " + token
+                }
+            });
 
-                body: JSON.stringify({
-                    email: email,
-                    permission: permission
-                })
 
-            }
-        );
+        const result =
+            await response.text();
 
-        const result = await response.text();
 
         if (response.ok) {
 
             message.classList.add("is-success");
-            message.innerText = result || "Share request sent.";
 
+            message.innerText =
+                result || "Share request sent.";
+
+
+            // Refresh requests
             loadShareRequests();
 
-            // Close only after a real success, per the spec.
-            setTimeout(closeShareModal, 900);
+
+            // Close modal after success
+            setTimeout(
+                closeShareModal,
+                900
+            );
+
 
         } else {
 
-            // Show the actual backend error — never a fake success.
             message.classList.add("is-error");
-            message.innerText = result || ("Could not share document (status " + response.status + ").");
+
+            message.innerText =
+                result ||
+                "Could not share document (status " +
+                response.status +
+                ").";
+
 
             submitBtn.disabled = false;
             cancelBtn.disabled = false;
-            submitBtn.innerText = "Send request";
+
+            submitBtn.innerText =
+                "Send request";
+
             shareRequestInFlight = false;
         }
 
+
     } catch (error) {
 
-        console.error("Share error:", error);
+        console.error(
+            "Share error:",
+            error
+        );
+
 
         message.classList.add("is-error");
-        message.innerText = "Error sharing document.";
+
+        message.innerText =
+            "Error sharing document.";
+
 
         submitBtn.disabled = false;
         cancelBtn.disabled = false;
-        submitBtn.innerText = "Send request";
+
+        submitBtn.innerText =
+            "Send request";
+
         shareRequestInFlight = false;
     }
 }
-
 
 // ==========================================
 // LOGOUT

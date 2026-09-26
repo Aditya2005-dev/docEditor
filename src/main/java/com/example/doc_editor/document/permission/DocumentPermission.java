@@ -56,4 +56,12 @@ public class DocumentPermission {
     public void setPermission(Permission permission) {
         this.permission = permission;
     }
+
+    public void setDocument(Document document) {
+        this.document = document;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

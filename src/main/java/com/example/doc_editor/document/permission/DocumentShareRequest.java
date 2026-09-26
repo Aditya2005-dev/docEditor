@@ -37,22 +37,20 @@ public class DocumentShareRequest {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    public DocumentShareRequest() {
-    }
 
-    public DocumentShareRequest(
-            Document document,
-            User sender,
-            User receiver,
-            Permission permission
-    ) {
-        this.document = document;
-        this.sender = sender;
-        this.receiver = receiver;
-        this.permission = permission;
+    // ==========================================
+    // CONSTRUCTOR
+    // ==========================================
+
+    public DocumentShareRequest() {
         this.status = ShareRequestStatus.PENDING;
         this.createdAt = LocalDateTime.now();
     }
+
+
+    // ==========================================
+    // GETTERS
+    // ==========================================
 
     public Long getId() {
         return id;
@@ -80,6 +78,27 @@ public class DocumentShareRequest {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+
+    // ==========================================
+    // SETTERS
+    // ==========================================
+
+    public void setDocument(Document document) {
+        this.document = document;
+    }
+
+    public void setSender(User sender) {
+        this.sender = sender;
+    }
+
+    public void setReceiver(User receiver) {
+        this.receiver = receiver;
+    }
+
+    public void setPermission(Permission permission) {
+        this.permission = permission;
     }
 
     public void setStatus(ShareRequestStatus status) {
