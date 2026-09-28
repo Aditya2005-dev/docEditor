@@ -1,0 +1,35 @@
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: doc-editor-mysql
+    restart: always
+
+    environment:
+      MYSQL_DATABASE: doc_editor
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: doceditor
+      MYSQL_PASSWORD: doceditor123
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  app:
+    build: .
+    container_name: doc-editor-app
+    restart: always
+
+    depends_on:
+      - mysql
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/doc_editor
+      DB_USERNAME: doceditor
+      DB_PASSWORD: doceditor123
+      JWT_SECRET: my-super-secret-key-for-doc-editor-2026
+
+volumes:
+  mysql_data:
